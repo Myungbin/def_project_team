@@ -1,0 +1,56 @@
+---
+title: "마늘 재배"
+author: "곽명빈"
+date: '2021 8 10 '
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(tidyverse)
+library(lubridate)
+```
+
+# 데이터 읽기
+```{r}
+weather <- read.csv("강원도 날씨.csv")
+garlic <- read.csv("마늘가격.csv")
+production <- read.csv("마늘생산량.csv")
+garlic <- garlic %>% filter(광역산지 == '강원') #강원지역만 선정
+```
+
+
+```{r}
+a <- unique(weather$지점명)
+b <- unique(garlic$시군산지)
+```
+
+# 데이터 
+```{r}
+c <- c('춘천', '철원', '강릉', '동해', '원주', '홍천', '태백', '정선') # 두개 겹치는거 
+
+weather1 <- weather %>% filter(지점명 == '춘천'|지점명 == '철원'|지점명 == '강릉'|지점명 == '동해'|지점명 == '원주'|지점명 == '홍천'|지점명 == '태백'|지점명 == '정선')
+
+garlic1 <- garlic %>% filter(시군산지 == '춘천'|시군산지 == '철원'|시군산지 == '강릉'|시군산지 == '동해'|시군산지 == '원주'|시군산지 == '홍천'|시군산지 == '태백'|시군산지 == '정선')
+
+
+unique(weather1$지점명)
+unique(garlic1$시군산지)
+```
+
+# 시점
+```{r}
+d <- substr(garlic1$일자, 1, 4) # 연도만 추출해보자
+
+garlic1 <- cbind(garlic1, d)
+
+names(garlic1)[names(garlic1)=="d"]="시점"
+
+
+```
+
+
