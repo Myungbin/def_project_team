@@ -21,6 +21,9 @@ library(knitr)
 include_graphics("재배환경.PNG")
 include_graphics("파종시기.png")
 include_graphics("품종선택.png")
+include_graphics("마늘생육과정.png")
+include_graphics("출하시기.png")
+include_graphics("환경.png")
 
 ```
 
@@ -152,12 +155,12 @@ a2020 <- data.frame(tapply(g2020$거래량.톤., g2020$시군산지, mean))
 a2021 <- data.frame(tapply(g2021$거래량.톤., g2021$시군산지, mean))
 
 
-write.csv(a2016,"a2016.csv")
-write.csv(a2017,"a2017.csv")
-write.csv(a2018,"a2018.csv")
-write.csv(a2019,"a2019.csv")
-write.csv(a2020,"a2020.csv")
-write.csv(a2021,"a2021.csv")
+#write.csv(a2016,"a2016.csv")
+#write.csv(a2017,"a2017.csv")
+#write.csv(a2018,"a2018.csv")
+#write.csv(a2019,"a2019.csv")
+#write.csv(a2020,"a2020.csv")
+#write.csv(a2021,"a2021.csv")
 
 a2015 <- read.csv("a2015.csv")
 a2016 <- read.csv("a2016.csv")
@@ -169,17 +172,75 @@ a2021 <- read.csv("a2021.csv")
 ```
 
 
+# 데이터 합치는 과정(1) max치를 기준으로 합치기
 ```{r}
-a <- rbind(a2015,a2016,a2017,a2018,a2019,a2020,a2021)
+# a <- rbind(a2015,a2016,a2017,a2018,a2019,a2020,a2021) # 데이터 합치기
 
-ab <- c("시점", "시군산지") 
+# ab <- c("시점", "시군산지")  
 
-pro_gar <- merge(pro_gar, a, by = ab)
+# pro_gar <- merge(pro_gar, a, by = ab) # 합치기
 
-weather1 <- weather %>% filter(지점명 == '홍천')
+# write.csv(pro_gar, "garlic.csv")
 
-pro_gar1 <- merge(pro_gar, weather1, by = '일자')
+# pro_gar <- read.csv("garlic.csv")
+
+# summary(pro_gar$평균) # max 8.83667 = 정선
+
+# weather1 <- filter(weather, 지점명 =='정선') # 정선의 날씨만 추출해서
+
+# pro_gar1 <- merge(pro_gar, weather1, by = '일자') # 일자 기준으로 merge 하기
 ```
 
+
+# 날씨 데이터 합치기 (지역 기반) 
+comments: 날씨와 중복되는 지역은 그대로 쓰고, 중복되지 않은 지역은 summary(pro_gar$평균) # max 8.83667 = 정선/ 을 통하여, 평균이 제일 높은 정선지역으로 날씨 변환
+```{r}
+weather2 <- weather %>% filter(지점명 == '춘천'|지점명 == '철원'|지점명 == '강릉'|지점명 == '동해'|지점명 == '원주'|지점명 == '홍천'|지점명 == '태백'|지점명 == '정선')
+
+unique(pro_gar$시군산지)
+unique(weather2$지점명)
+
+names(pro_gar)[names(pro_gar)=="시군산지"]="지점명"
+
+cv <- c("지점명", "일자")
+
+ga <- merge(pro_gar, weather2, by = cv) # 중복되는 곳
+
+unique(ga$지점명)
+
+# 중복되지 않은곳은 거래량평균치가 높은 정선으로 선택하기-------------------------
+
+garlic3 <- pro_gar %>% filter(지점명 != '춘천'&지점명 != '철원'&지점명 != '강릉'&지점명 != '동해'&지점명 != '원주'&지점명 != '홍천'&지점명 != '태백'&지점명 != '정선') # 중복되지 않은곳 
+
+weather1 <- filter(weather, 지점명 =='정선') # 정선의 날씨만 추출해서
+
+pro_gar3 <- merge(garlic3, weather1, by = '일자') # 일자 기준으로 merge 하기 
+
+# write.csv(ga, "편집해야해1.csv")
+# write.csv(pro_gar3, "편집해야해2.csv")
+
+aq <- read.csv("편집해야해1.csv")
+aq1 <- read.csv("편집해야해2.csv")
+
+pro_gar_we <- rbind(aq, aq1)
+
+# write.csv(pro_gar_we, "마늘 날씨 생산량.csv")
+
+pro_gar_we <- read.csv("마늘 날씨 생산량.csv")
+```
+
+
+
+# 마늘 재배에 영향을 줄 수 있는 날씨요인
+```{r}
+include_graphics("마늘생육과정.png")
+
+# 파종시기 9월~10월 
+# 수확시기 5월~6월
+# 25' 이상에선 생육정지
+
+
+
+```
 
 
