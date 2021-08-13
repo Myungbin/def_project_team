@@ -14,6 +14,7 @@ library(tidyr)
 library(tidyverse)
 library(lubridate)
 library(knitr)
+library(ggplot2)
 ```
 # 마늘
 
@@ -29,7 +30,7 @@ include_graphics("환경.png")
 
 # 데이터 읽기
 ```{r}
-weather <- read.csv("강원도 날씨.csv")
+weather <- read.csv("강원날씨.csv")
 garlic <- read.csv("마늘가격.csv")
 production <- read.csv("마늘생산량.csv")
 garlic <- garlic %>% filter(광역산지 == '강원') #강원지역만 선정
@@ -50,8 +51,8 @@ b <- unique(garlic$시군산지)
 # garlic1 <- garlic %>% filter(시군산지 == '춘천'|시군산지 == '철원'|시군산지 == '강릉'|시군산지 == '동해'|시군산지 == '원주'|시군산지 == '홍천'|시군산지 == '태백'|시군산지 == '정선')
 
 
-unique(weather1$지점명) 
-unique(garlic1$시군산지)
+#unique(weather1$지점명) 
+#unique(garlic1$시군산지)
 ```
 
 # 시점
@@ -199,14 +200,19 @@ weather2 <- weather %>% filter(지점명 == '춘천'|지점명 == '철원'|지�
 
 unique(pro_gar$시군산지)
 unique(weather2$지점명)
-
 names(pro_gar)[names(pro_gar)=="시군산지"]="지점명"
 
+write.
 cv <- c("지점명", "일자")
 
-ga <- merge(pro_gar, weather2, by = cv) # 중복되는 곳
+# ga <- merge(pro_gar, weather2, by = cv) # 중복되는 곳
+
+ga1 <- left_join(pro_gar, weather2, by = cv) # 중복되는 곳
 
 unique(ga$지점명)
+unique(ga$시점)
+
+# d2 <- substr(weather2$일자, 1, 4) # 연도만 추출해보자
 
 # 중복되지 않은곳은 거래량평균치가 높은 정선으로 선택하기-------------------------
 
@@ -214,10 +220,13 @@ garlic3 <- pro_gar %>% filter(지점명 != '춘천'&지점명 != '철원'&지점
 
 weather1 <- filter(weather, 지점명 =='정선') # 정선의 날씨만 추출해서
 
-pro_gar3 <- merge(garlic3, weather1, by = '일자') # 일자 기준으로 merge 하기 
+# pro_gar3 <- merge(garlic3, weather1, by = '일자') # 일자 기준으로 merge 하기 
 
-# write.csv(ga, "편집해야해1.csv")
-# write.csv(pro_gar3, "편집해야해2.csv")
+pro_gar31 <- left_join(garlic3, weather1, by = '일자') # 일자 기준으로 merge 하기 
+
+
+#write.csv(ga1, "편집해야해1.csv")
+#write.csv(pro_gar31, "편집해야해2.csv")
 
 aq <- read.csv("편집해야해1.csv")
 aq1 <- read.csv("편집해야해2.csv")
@@ -227,11 +236,12 @@ pro_gar_we <- rbind(aq, aq1)
 # write.csv(pro_gar_we, "마늘 날씨 생산량.csv")
 
 pro_gar_we <- read.csv("마늘 날씨 생산량.csv")
+
+
 ```
 
+# 마늘 재배에 영향을 줄 수 있는 날씨요인 
 
-
-# 마늘 재배에 영향을 줄 수 있는 날씨요인
 ```{r}
 include_graphics("마늘생육과정.png")
 
@@ -239,8 +249,70 @@ include_graphics("마늘생육과정.png")
 # 수확시기 5월~6월
 # 25' 이상에선 생육정지
 
+str(pro_gar_we)
+
+as.numeric(pro_gar_we$도매가격.원.kg.)
+
+# 산점도
+ggplot(pro_gar_we, aes(x=pro_gar_we$생산량..톤., y=pro_gar_we$평균기온..C.)) +
+  geom_point(shape=10, size=1, colour="blue") +
+  ggtitle("Scatter plot : 도매가격, 평균기온") +
+  theme(plot.title=element_text(size=20))
+
+
+cor.test(pro_gar_we$생산량..톤.,pro_gar_we$평균기온..C., method = "pearson",conf.level = 0.95) 
+```
+# 마늘 판매량에 영향을 주는것은 전년도 날씨 데이터 
+
+```{r}
+pro_gar
+
+weather
+d2 <- substr(weather$일시, 1, 4) # 연도만 추출해보자
+
+d3 <- substr(weather$일시, 6, 7) # 연도만 추출해보자
+
+d2 <- data.frame(d2)
+
+d3 <- data.frame(d3)
+
+weather3 <- cbind(weather, d2) # d2와 날씨를 합치기
+
+weather3 <- cbind(weather3, d3) # d3와 날씨를 합치기
+
+names(weather3)[names(weather3)=="d3"]="월"
+
+names(weather3)[names(weather3)=="d2"]="시점"
+# 4계절분할
+
+spring <- filter(weather3, weather3$월 == '03' | weather3$월 == '04' | weather3$월 == '05')
+
+summer <- filter(weather3, weather3$월 == '06' | weather3$월 == '07' | weather3$월 == '08')
+
+fall <- filter(weather3, weather3$월 == '09' | weather3$월 == '10' | weather3$월 == '11')
+
+winter <- filter(weather3, weather3$월 == '12' | weather3$월 == '01' | weather3$월 == '02')
+
+d4 <- substr(pro_gar$일자, 6, 7) # 연도만 추출해보자
+
+pro_gar <- cbind(pro_gar, d4) # d3와 날씨를 합치기
+
+names(pro_gar)[names(pro_gar)=="d4"]="월"
+
+# write.csv(pro_gar, "gallic.csv")
+```
+
+# 각 년도의 전년도 날씨데이터를 넣어서 데이터 만들기
+```{r}
+g2015 <- pro_gar %>% filter(시점 == 2015)
+g2016 <- pro_gar %>% filter(시점 == 2016)
+g2017 <- pro_gar %>% filter(시점 == 2017)
+g2018 <- pro_gar %>% filter(시점 == 2018)
+g2019 <- pro_gar %>% filter(시점 == 2019)
+g2020 <- pro_gar %>% filter(시점 == 2020)
+g2021 <- pro_gar %>% filter(시점 == 2021)
+
 
 
 ```
-
 
