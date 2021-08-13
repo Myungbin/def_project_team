@@ -198,20 +198,32 @@ names(G_weather)[names(G_weather)=="year"]="시점"
 # 4계절분할----------------------------------------------------------------------------------------
 
 spring <- filter(G_weather, G_weather$월 == '03' | G_weather$월 == '04' | G_weather$월 == '05')
+ spring <- spring %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
 
 summer <- filter(G_weather, G_weather$월 == '06' | G_weather$월 == '07' | G_weather$월 == '08')
+ summer <- summer %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
+
 
 fall <- filter(G_weather, G_weather$월 == '09' | G_weather$월 == '10' | G_weather$월 == '11')
+ fall <- fall %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
 
 winter <- filter(G_weather, G_weather$월 == '12' | G_weather$월 == '01' | G_weather$월 == '02')
+ winter <- winter %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
+
 
 # -----------------------------------------------------------------------------------------------
 
 month <- substr(garlic_production$일자, 6, 7) # 월 만 추출해보자
 
-garlic_production <- cbind(garlic_production, month) # d3와 데이터를 합치기
+garlic_production <- cbind(garlic_production, month) # month와 데이터를 합치기
 
 names(garlic_production)[names(garlic_production)=="month"]="월"
+
+garlic_production <- garlic_production %>% relocate(starts_with("월"), .after=시점) # 지점명 뒤에 생산량 
+
+# unique(garlic_production$시점) 2015~ 2021
+
+
 ```
 
 
