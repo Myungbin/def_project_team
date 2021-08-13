@@ -1,0 +1,217 @@
+---
+title: "코드정리작업"
+author: "곽명빈"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(ggplot2)
+```
+
+##1 데이터 읽기
+```{r}
+weather <- read.csv("강원도 날씨.csv")
+garlic <- read.csv("마늘가격.csv")
+production <- read.csv("마늘생산량.csv")
+garlic <- filter(garlic, 광역산지 == '강원') #강원지역만 선정
+```
+
+##2 지역명 통일을 위해서 어떤 지점이 있는지 확인
+```{r}
+weather_name <- unique(weather$지점명)
+garlic_name <- unique(garlic$시군산지)
+```
+
+##3 마늘 + 생산량 데이터 만들기
+```{r}
+year <- substr(garlic$일자, 1, 4) # 연도만 추출해보자
+
+garlic <- cbind(garlic, year) # d와 마늘을 합치기
+
+names(garlic)[names(garlic)=="year"]="시점" # 열이름을 시점으로 변경
+
+garlic_production <- merge(garlic, production, by ="시점") # 시점 기준으로 합치기
+
+# 필요없는 열을 제거하기
+garlic_production <- subset(garlic_production, select = -시도별)
+garlic_production <- subset(garlic_production, select = -시장)
+garlic_production <- subset(garlic_production, select = -법인)
+
+```
+
+##4 단위 통일 시키기(톤으로)
+```{r}
+t <- garlic_production$X10a당.생산량..kg.*0.001 # kg단위를 t단위로 전환
+
+garlic_production <- cbind(garlic_production, t)
+
+names(garlic_production)[names(garlic_production)=="t"]="10a당 생산량.톤" # 열이름을 시점으로 변경
+
+```
+
+
+##5 연도별 품종의 거래량 평균데이터 만들기
+```{r}
+unique(garlic_production$시군산지)
+g_ghd <- garlic_production %>% filter(시군산지 == '홍천')
+g_vud <- garlic_production %>% filter(시군산지 == '평창')
+g_cjf <- garlic_production %>% filter(시군산지 == '철원') 
+g_cns <- garlic_production %>% filter(시군산지 == '춘천') 
+g_tka <- garlic_production %>% filter(시군산지 == '삼척') 
+g_rkd <- garlic_production %>% filter(시군산지 == '강릉') 
+g_ghld <- garlic_production %>% filter(시군산지 == '횡성') 
+g_rh <- garlic_production %>% filter(시군산지 == '강원고성') 
+g_dnjs <- garlic_production %>% filter(시군산지 == '원주') 
+g_xo <- garlic_production %>% filter(시군산지 == '태백') 
+g_ehd <- garlic_production %>% filter(시군산지 == '동해') 
+g_wjd <- garlic_production %>% filter(시군산지 == '정선') 
+g_did <- garlic_production %>% filter(시군산지 == '양구') 
+g_ghk <- garlic_production %>% filter(시군산지 == '화천') 
+```
+# Show in New Window
+[1] "홍천"     "평창"     "철원"     "춘천"     "삼척"     "강릉"     "횡성"     "강원고성" "원주"    
+[10] "태백"     "동해"     "정선"     "양구"     "화천"    
+
+##6 연도별 분류
+```{r}
+g2015 <- garlic_production %>% filter(시점 == 2015)
+g2016 <- garlic_production %>% filter(시점 == 2016)
+g2017 <- garlic_production %>% filter(시점 == 2017)
+g2018 <- garlic_production %>% filter(시점 == 2018)
+g2019 <- garlic_production %>% filter(시점 == 2019)
+g2020 <- garlic_production %>% filter(시점 == 2020)
+g2021 <- garlic_production %>% filter(시점 == 2021)
+
+```
+
+
+##7 지역의 거래량의 평균
+```{r}
+
+a2015 <- data.frame(tapply(g2015$거래량.톤., g2015$시군산지, mean))
+a2016 <- data.frame(tapply(g2016$거래량.톤., g2016$시군산지, mean))
+a2017 <- data.frame(tapply(g2017$거래량.톤., g2017$시군산지, mean))
+a2018 <- data.frame(tapply(g2018$거래량.톤., g2018$시군산지, mean))
+a2019 <- data.frame(tapply(g2019$거래량.톤., g2019$시군산지, mean))
+a2020 <- data.frame(tapply(g2020$거래량.톤., g2020$시군산지, mean))
+a2021 <- data.frame(tapply(g2021$거래량.톤., g2021$시군산지, mean))
+
+# csv파일로 저장한 이유는 엑셀내에서 수정이 편하기 때문 (열이름 변경과 시점열 만들었음)
+
+#write.csv(a2016,"a2016.csv")
+#write.csv(a2017,"a2017.csv")
+#write.csv(a2018,"a2018.csv")
+#write.csv(a2019,"a2019.csv")
+#write.csv(a2020,"a2020.csv")
+#write.csv(a2021,"a2021.csv")
+
+a2015 <- read.csv("a2015.csv")
+a2016 <- read.csv("a2016.csv")
+a2017 <- read.csv("a2017.csv")
+a2018 <- read.csv("a2018.csv")
+a2019 <- read.csv("a2019.csv")
+a2020 <- read.csv("a2020.csv")
+a2021 <- read.csv("a2021.csv")
+
+all_year <- rbind(a2015,a2016,a2017,a2018,a2019,a2020,a2021) # 데이터 합치기
+
+row_name <- c("시점", "시군산지")  
+
+garlic_production <- merge(garlic_production, all_year, by = row_name) # 합치기
+
+# write.csv(garlic_production, "garlic.csv")
+
+# garlic_production <- read.csv("garlic.csv")
+```
+
+##8 날씨 데이터 합치기 (지역 기반) 정안될때 이 데이터를 사용하는 것으로 하자
+comments: 날씨와 중복되는 지역은 그대로 쓰고, 중복되지 않은 지역은 summary(garlic_production$평균) # max 8.83667 = 정선/ 을 통하여, 평균이 제일 높은 정선지역으로 날씨 변환
+```{r}
+weather_y <- weather %>% filter(지점명 == '춘천'|지점명 == '철원'|지점명 == '강릉'|지점명 == '동해'|지점명 == '원주'|지점명 == '홍천'|지점명 == '태백'|지점명 == '정선') ##2 부분에서 겹치는 데이터만 추출하여 저장
+
+unique(garlic_production$시군산지) 
+unique(weather_y$지점명)
+names(garlic_production)[names(garlic_production)=="시군산지"]="지점명" # 합치기 위하여 시군산지를 지점명으로 변경
+names(weather_y)[names(weather_y)=="일시"]="일자" # 합치기 위하여 일시를 일자로 변경
+
+row <- c("지점명", "일자")
+
+# ga <- merge(garlic_production, weather2, by = cv) # 중복되는 곳
+
+garlic_overlap <- left_join(garlic_production, weather_y, by = row) # 중복되는 곳
+
+
+year2 <- substr(weather_y $일자, 1, 4) # 연도만 추출해보자
+
+# 중복되지 않은곳은 거래량평균치가 높은 정선으로 선택하기-------------------------
+
+garlic_ND <- garlic_production %>% filter(지점명 != '춘천'&지점명 != '철원'&지점명 != '강릉'&지점명 != '동해'&지점명 != '원주'&지점명 != '홍천'&지점명 != '태백'&지점명 != '정선') # 중복되지 않은곳 
+
+weather_Jeongseon <- filter(weather, 지점명 =='정선') # 정선의 날씨만 추출해서
+
+# garlic_production3 <- merge(garlic3, weather1, by = '일자') # 일자 기준으로 merge 하기 
+
+garlic_Jeongseon <- left_join(garlic_ND, weather_Jeongseon, by = '일자') # 일자 기준으로 merge 하기 
+
+# csv로 저장한이유는 열의 위치가 다르기때문에 옮기려고 했음
+#write.csv(garlic_overlap, "편집해야해1.csv")
+#write.csv(garlic_Jeongseon, "편집해야해2.csv")
+
+garlic_overlap <- read.csv("편집해야해1.csv")
+garlic_Jeongseon <- read.csv("편집해야해2.csv")
+
+garlic_production_we <- rbind(garlic_overlap, garlic_Jeongseon) # 두 데이터 합치기
+
+# write.csv(garlic_production_we, "마늘 날씨 생산량.csv")
+
+garlic_production_we <- read.csv("마늘 날씨 생산량.csv")
+
+```
+
+
+##9 마늘 판매량에 영향을 주는것은 전년도 날씨 데이터라 생각하고 해보기
+
+```{r}
+G_weather <- read.csv("강원날씨.csv") # 강원도 날씨 월별로 나타낸 데이터입니다.
+
+year <- substr(G_weather$일시, 1, 4) # 연도만 추출해보자
+
+month <- substr(G_weather$일시, 6, 7) # 연도만 추출해보자
+
+G_weather <- cbind(G_weather, year) # 연도와 날씨를 합치기
+
+G_weather <- cbind(G_weather, month) # 월 과 날씨를 합치기
+
+names(G_weather)[names(G_weather)=="month"]="월"
+
+names(G_weather)[names(G_weather)=="year"]="시점"
+
+# 4계절분할----------------------------------------------------------------------------------------
+
+spring <- filter(G_weather, G_weather$월 == '03' | G_weather$월 == '04' | G_weather$월 == '05')
+
+summer <- filter(G_weather, G_weather$월 == '06' | G_weather$월 == '07' | G_weather$월 == '08')
+
+fall <- filter(G_weather, G_weather$월 == '09' | G_weather$월 == '10' | G_weather$월 == '11')
+
+winter <- filter(G_weather, G_weather$월 == '12' | G_weather$월 == '01' | G_weather$월 == '02')
+
+# -----------------------------------------------------------------------------------------------
+
+month <- substr(garlic_production$일자, 6, 7) # 월 만 추출해보자
+
+garlic_production <- cbind(garlic_production, month) # d3와 데이터를 합치기
+
+names(garlic_production)[names(garlic_production)=="month"]="월"
+```
+
+
