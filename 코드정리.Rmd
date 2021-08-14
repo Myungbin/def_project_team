@@ -145,7 +145,7 @@ names(weather_y)[names(weather_y)=="일시"]="일자" # 합치기 위하여 일�
 
 row <- c("지점명", "일자")
 
-# ga <- merge(garlic_production, weather2, by = cv) # 중복되는 곳
+# garlic_overlap <- merge(garlic_production, weather_y, by = row) # 중복되는 곳
 
 garlic_overlap <- left_join(garlic_production, weather_y, by = row) # 중복되는 곳
 
@@ -158,7 +158,7 @@ garlic_ND <- garlic_production %>% filter(지점명 != '춘천'&지점명 != '�
 
 weather_Jeongseon <- filter(weather, 지점명 =='정선') # 정선의 날씨만 추출해서
 
-# garlic_production3 <- merge(garlic3, weather1, by = '일자') # 일자 기준으로 merge 하기 
+# garlic_Jeongseon <- merge(garlic_ND, weather_Jeongseon, by = '일자') # 일자 기준으로 merge 하기 
 
 garlic_Jeongseon <- left_join(garlic_ND, weather_Jeongseon, by = '일자') # 일자 기준으로 merge 하기 
 
@@ -178,7 +178,7 @@ garlic_production_we <- read.csv("마늘 날씨 생산량.csv")
 ```
 
 
-##9 마늘 판매량에 영향을 주는것은 전년도 날씨 데이터라 생각하고 해보기
+##9 마늘 판매량에 영향을 주는것은 전년도 날씨 데이터라 생각하고 해보기 (안쓸 가능성 높음)
 
 ```{r}
 G_weather <- read.csv("강원날씨.csv") # 강원도 날씨 월별로 나타낸 데이터입니다.
@@ -194,6 +194,8 @@ G_weather <- cbind(G_weather, month) # 월 과 날씨를 합치기
 names(G_weather)[names(G_weather)=="month"]="월"
 
 names(G_weather)[names(G_weather)=="year"]="시점"
+
+G_weather <- subset(G_weather, select = -지점)
 
 # 4계절분할----------------------------------------------------------------------------------------
 
@@ -224,6 +226,105 @@ garlic_production <- garlic_production %>% relocate(starts_with("월"), .after=�
 # unique(garlic_production$시점) 2015~ 2021
 
 
+
 ```
 
+##10 마늘이 생육정지 되는 온도인 25'이상만 뽑아내보기
 
+```{r}
+# str(weather)
+
+high <-  weather%>% filter(평균기온..C. >= 25)
+
+year <- substr(high$일자, 1, 4) # 연도만 추출해보자
+
+month <- substr(high$일자, 6, 7) # 연도만 추출해보자
+
+high <- cbind(high, year) # 연도와 날씨를 합치기
+
+high <- cbind(high, month) # 월 과 날씨를 합치기
+
+names(high)[names(high)=="month"]="월"
+
+names(high)[names(high)=="year"]="시점"
+
+high <- high %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
+
+high <- subset(high, select = -지점) # 지점제거 
+
+table(high$지점명) # 강원도 지역의 날씨는 비슷할거니까 거래소가 가장 많은 곳으로 선택하자
+
+table(garlic$시장) # 1. 강릉도매 2. 인천남촌도매 3. 춘천도매 -> 강릉으로 선택
+
+#강릉도매 광주각화도매     구리도매 대구북부도매 대전노은도매 부산반여도매 부산엄궁도매 서울가락도매 
+#         670            1            3            6            1            7           33           35 
+#서울강서도매     수원도매     안산도매     안양도매     원주도매 인천남촌도매 인천삼산도매 창원내서도매 
+#          11            1            4            8          482           38            8           91 
+#창원팔용도매     천안도매     춘천도매 
+#           1            6          325 
+
+# 강원도 지역의 날씨가 25' 이상인 횟수
+
+#2014년 (291회)
+count2014 <- filter(high, high$시점 == 2014)
+  sum(table(count2014$평균기온..C.))
+
+#2015년 (322회)
+count2015 <- filter(high, high$시점 == 2015)
+  sum(table(count2015$평균기온..C.))
+ 
+#2016년 (433회)
+count2016 <- filter(high, high$시점 == 2016 )
+  sum(table(count2016$평균기온..C.)) 
+   
+#2017년 (390회)
+count2017 <- filter(high, high$시점 == 2017 )
+  sum(table(count2017$평균기온..C.))
+  
+#2018년 (542회)
+count2018 <- filter(high, high$시점 == 2018 )
+  sum(table(count2018$평균기온..C.))
+  
+#2019년 (398회)
+count2019 <- filter(high, high$시점 == 2019 )
+  sum(table(count2019$평균기온..C.))
+  
+#2020년 (351회)
+count2020 <- filter(high, high$시점 == 2020 )
+  sum(table(count2020$평균기온..C.))  
+  
+```
+
+```{r} 
+# 강릉 지역의 온도가 25' 이상인 횟수 (안쓸 가능성 높음)
+#2014년 (38회)
+count2014 <- filter(high, high$시점 == 2014 & high$지점명 == '강릉')
+  sum(table(count2014$평균기온..C.))
+
+#2015년 (34회)
+count2015 <- filter(high, high$시점 == 2015 & high$지점명 == '강릉')
+  sum(table(count2015$평균기온..C.))
+ 
+#2016년 (36회)
+count2016 <- filter(high, high$시점 == 2016 & high$지점명 == '강릉')
+  sum(table(count2016$평균기온..C.)) 
+   
+#2017년 (35회)
+count2017 <- filter(high, high$시점 == 2017 & high$지점명 == '강릉')
+  sum(table(count2017$평균기온..C.))
+  
+#2018년 (55회)
+count2018 <- filter(high, high$시점 == 2018 & high$지점명 == '강릉')
+  sum(table(count2018$평균기온..C.))
+  
+#2019년 (53회)
+count2019 <- filter(high, high$시점 == 2019 & high$지점명 == '강릉')
+  sum(table(count2019$평균기온..C.))
+  
+#2020년 (42회)
+count2020 <- filter(high, high$시점 == 2020 & high$지점명 == '강릉')
+  sum(table(count2020$평균기온..C.))  
+
+```
+
+## 11 내일(0815) 해야할것: 높은 온도뿐만아니라 마늘 성장에 영향을 미치는 요소 ex) 가뭄 홍수 등의 빈도를 계산해서 열추가를 목표로 하자
