@@ -2,7 +2,9 @@
 title: "코드정리작업"
 author: "곽명빈"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -293,7 +295,80 @@ count2019 <- filter(high, high$시점 == 2019 )
 count2020 <- filter(high, high$시점 == 2020 )
   sum(table(count2020$평균기온..C.))  
   
+# 빈도를 합치기 위해 df생성 전년도 데이터를 위해서 시점 2개 생성 시점1이 진짜 시점
+df_high <- data.frame(시점1 = c(2014,2015,2016,2017,2018,2019,2020),
+                 시점 = c(2015,2016,2017,2018,2019,2020,2021),    
+                 고온횟수 = c(291,322,433,390,542,398,351))  
+
+
+unique(garlic_production$시점)
+
+garlic_production <- merge(garlic_production, df_high, by = '시점') 
 ```
+
+##11 동해 피해 온도인 영하 5'를 추출하여 추가하기
+
+```{r}
+low <-  weather%>% filter(평균기온..C. <= -5)
+
+year <- substr(low$일자, 1, 4) # 연도만 추출해보자
+
+month <- substr(low$일자, 6, 7) # 연도만 추출해보자
+
+low <- cbind(low, year) # 연도와 날씨를 합치기
+
+low <- cbind(low, month) # 월 과 날씨를 합치기
+
+names(low)[names(low)=="month"]="월"
+
+names(low)[names(low)=="year"]="시점"
+
+low <- low %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
+
+low <- subset(low, select = -지점) # 지점제거 
+
+#2014년 (255회)
+count2014 <- filter(low, low$시점 == 2014)
+  sum(table(count2014$평균기온..C.))
+
+#2015년 (146회)
+count2015 <- filter(low, low$시점 == 2015)
+  sum(table(count2015$평균기온..C.))
+ 
+#2016년 (221회)
+count2016 <- filter(low, low$시점 == 2016 )
+  sum(table(count2016$평균기온..C.)) 
+   
+#2017년 (309회)
+count2017 <- filter(low, low$시점 == 2017 )
+  sum(table(count2017$평균기온..C.))
+  
+#2018년 (431회)
+count2018 <- filter(low, low$시점 == 2018 )
+  sum(table(count2018$평균기온..C.))
+  
+#2019년 (146회)
+count2019 <- filter(low, low$시점 == 2019 )
+  sum(table(count2019$평균기온..C.))
+  
+#2020년 (157회)
+count2020 <- filter(low, low$시점 == 2020 )
+  sum(table(count2020$평균기온..C.))  
+  
+# 빈도를 합치기 위해 df생성 전년도 데이터를 위해서 시점 2개 생성 시점1이 진짜 시점
+df_low <- data.frame(시점1 = c(2014,2015,2016,2017,2018,2019,2020),
+                 시점 = c(2015,2016,2017,2018,2019,2020,2021),    
+                 저온횟수 = c(255,146,221,309,431,146,157))  
+
+garlic_production <- merge(garlic_production, df_low, by = '시점') 
+
+
+```
+
+
+
+
+
 
 ```{r} 
 # 강릉 지역의 온도가 25' 이상인 횟수 (안쓸 가능성 높음)
