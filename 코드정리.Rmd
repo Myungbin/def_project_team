@@ -19,7 +19,18 @@ library(knitr)
 library(ggplot2)
 ```
 
-##1 데이터 읽기
+
+# 서론
+### 마늘 
+마늘이 자라는 과정에서 여러 가지 기상조건, 즉 온도와 광, 수분 외에 토양 
+영양분의 상호작용 등이 큰 영향을 미친다. 특히 지나친 고온과 인편분화기의 
+다량의 강우 및 과다한 질소시비, 연작에 따른 특정 영양분의 결핍 등은 생리장
+해를 유발하는 원인이 되므로 적정한 예방대책이 필요하다. 특히 벌마늘 발생과 
+잎끝마름병 현상 그리고 최근에 남부일원에 많이 발생되고 있는 스펀지마늘은 
+상품성 및 수량성에 큰 저해요인이 되므로 사전 예방대책이 요구된다. 
+
+
+### 1 데이터 읽기
 ```{r}
 weather <- read.csv("강원도 날씨.csv")
 garlic <- read.csv("마늘가격.csv")
@@ -27,13 +38,13 @@ production <- read.csv("마늘생산량.csv")
 garlic <- filter(garlic, 광역산지 == '강원') #강원지역만 선정
 ```
 
-##2 지역명 통일을 위해서 어떤 지점이 있는지 확인
+### 2 지역명 통일을 위해서 어떤 지점이 있는지 확인
 ```{r}
 weather_name <- unique(weather$지점명)
 garlic_name <- unique(garlic$시군산지)
 ```
 
-##3 마늘 + 생산량 데이터 만들기
+### 3 마늘 + 생산량 데이터 만들기
 ```{r}
 year <- substr(garlic$일자, 1, 4) # 연도만 추출해보자
 
@@ -50,7 +61,7 @@ garlic_production <- subset(garlic_production, select = -법인)
 
 ```
 
-##4 단위 통일 시키기(톤으로)
+### 4 단위 통일 시키기(톤으로)
 ```{r}
 t <- garlic_production$X10a당.생산량..kg.*0.001 # kg단위를 t단위로 전환
 
@@ -61,7 +72,7 @@ names(garlic_production)[names(garlic_production)=="t"]="10a당 생산량.톤" #
 ```
 
 
-##5 연도별 품종의 거래량 평균데이터 만들기
+### 5 연도별 품종의 거래량 평균데이터 만들기
 ```{r}
 unique(garlic_production$시군산지)
 g_ghd <- garlic_production %>% filter(시군산지 == '홍천')
@@ -83,7 +94,7 @@ g_ghk <- garlic_production %>% filter(시군산지 == '화천')
 [1] "홍천"     "평창"     "철원"     "춘천"     "삼척"     "강릉"     "횡성"     "강원고성" "원주"    
 [10] "태백"     "동해"     "정선"     "양구"     "화천"    
 
-##6 연도별 분류
+### 6 연도별 분류
 ```{r}
 g2015 <- garlic_production %>% filter(시점 == 2015)
 g2016 <- garlic_production %>% filter(시점 == 2016)
@@ -96,7 +107,7 @@ g2021 <- garlic_production %>% filter(시점 == 2021)
 ```
 
 
-##7 지역의 거래량의 평균
+### 7 지역의 거래량의 평균
 ```{r}
 
 a2015 <- data.frame(tapply(g2015$거래량.톤., g2015$시군산지, mean))
@@ -135,7 +146,7 @@ garlic_production <- merge(garlic_production, all_year, by = row_name) # 합치�
 # garlic_production <- read.csv("garlic.csv")
 ```
 
-##8 날씨 데이터 합치기 (지역 기반) 정안될때 이 데이터를 사용하는 것으로 하자
+### 8 날씨 데이터 합치기 (지역 기반) 정안될때 이 데이터를 사용하는 것으로 하자
 comments: 날씨와 중복되는 지역은 그대로 쓰고, 중복되지 않은 지역은 summary(garlic_production$평균) # max 8.83667 = 정선/ 을 통하여, 평균이 제일 높은 정선지역으로 날씨 변환
 ```{r}
 weather_y <- weather %>% filter(지점명 == '춘천'|지점명 == '철원'|지점명 == '강릉'|지점명 == '동해'|지점명 == '원주'|지점명 == '홍천'|지점명 == '태백'|지점명 == '정선') ##2 부분에서 겹치는 데이터만 추출하여 저장
@@ -180,7 +191,7 @@ garlic_production_we <- read.csv("마늘 날씨 생산량.csv")
 ```
 
 
-##9 마늘 판매량에 영향을 주는것은 전년도 날씨 데이터라 생각하고 해보기 (안쓸 가능성 높음)
+### 9 마늘 판매량에 영향을 주는것은 전년도 날씨 데이터라 생각하고 해보기 (안쓸 가능성 높음)
 
 ```{r}
 G_weather <- read.csv("강원날씨.csv") # 강원도 날씨 월별로 나타낸 데이터입니다.
@@ -231,7 +242,7 @@ garlic_production <- garlic_production %>% relocate(starts_with("월"), .after=�
 
 ```
 
-##10 마늘이 생육정지 되는 온도인 25'이상만 뽑아내보기
+### 10 마늘이 생육정지 되는 온도인 25'이상만 뽑아내보기
 
 ```{r}
 # str(weather)
@@ -306,7 +317,7 @@ unique(garlic_production$시점)
 garlic_production <- merge(garlic_production, df_high, by = '시점') 
 ```
 
-##11 동해 피해 온도인 영하 5'를 추출하여 추가하기
+### 11 동해 피해 온도인 영하 5'를 추출하여 추가하기
 
 ```{r}
 low <-  weather%>% filter(평균기온..C. <= -5)
@@ -362,44 +373,204 @@ df_low <- data.frame(시점1 = c(2014,2015,2016,2017,2018,2019,2020),
 
 garlic_production <- merge(garlic_production, df_low, by = '시점') 
 
+# write.csv(garlic_production, "data.csv")
+
+```
+### 12 누적 강수량 (3월, 10월) 
+가뭄은 물을 농장주가 계속 뿌려주기 때문에 크게 관련이 없다고 판단. 
+토양수분은 직접적인 관리가 가능
+강수량이 많은것은 제어가 불가능하기 때문에 가뭄은 배제하고 잦은비에 따른 현상 추가
+```{r}
+# str(weather)
+
+rain <- read.csv("필요한 날씨 데이터.csv")
+
+year <- substr(rain$일시, 1, 4) # 연도만 추출해보자
+
+month <- substr(rain$일시, 6, 7) # 연도만 추출해보자
+
+rain <- cbind(rain, year) # 연도와 날씨를 합치기
+
+rain <- cbind(rain, month) # 월 과 날씨를 합치기
+
+names(rain)[names(rain)=="month"]="월"
+
+names(rain)[names(rain)=="year"]="시점"
+
+rain <- rain %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
+
+rain1 <-  rain%>% filter(월 == '03' | 월 == '10' )
+
+rain1 <- rain1%>% filter(지점명 == '정선군')
+
+# write.csv(rain1, 'rain1.csv')
+# 엑셀처리 함 평균열만들어서 평균구함
+rain1 <- read.csv('rain1.csv')
+
+rain_mean <- rain1 %>% filter(!is.na(월합강수량평균))
+
+rain_mean <- cbind(rain_mean$시점, rain_mean$월합강수량평균)
+
+colnames(rain_mean) = c("시점", "월합강수량평균")
+
+garlic_production <- merge(garlic_production, rain_mean, by = '시점') 
+
 
 ```
 
+### 13 병균
+출처(윤덕훈외 4인, 기상요인 변화에 따른 주요 양념채소의 재배면적 및
+주요 병해 발생 변화, Climate Change Research(한국기후변화학회지)
+Vol. 4, No. 1, 2013, pp. 47～59 )
 
-
-
-
-
+마늘과 양파의 주요 병해인 흑색썩음균핵병의 발병율과 기상요인과의 관계를 보면, 마늘에서
+는 강수량보다는 기온이 더 높은 관계를 보였다. 구비대기인 4∼5월의 평균기온이 15.0∼15.9℃ 사
+이에서 발병율이 가장 높았다.
 ```{r} 
-# 강릉 지역의 온도가 25' 이상인 횟수 (안쓸 가능성 높음)
-#2014년 (38회)
-count2014 <- filter(high, high$시점 == 2014 & high$지점명 == '강릉')
+pest <-  weather%>% filter(평균기온..C. <= 16 & 평균기온..C. >= 15)
+
+year <- substr(pest$일자, 1, 4) # 연도만 추출해보자
+
+month <- substr(pest$일자, 6, 7) # 연도만 추출해보자
+
+pest <- cbind(pest, year) # 연도와 날씨를 합치기
+
+pest <- cbind(pest, month) # 월 과 날씨를 합치기
+
+names(pest)[names(pest)=="month"]="월"
+
+names(pest)[names(pest)=="year"]="시점"
+
+pest <- pest %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
+
+pest <- subset(pest, select = -지점) # 지점제거 
+
+pest <- pest%>% filter(월 == '04' | 월 == '05')
+
+#2014년 (92회)
+count2014 <- filter(pest, pest$시점 == 2014)
   sum(table(count2014$평균기온..C.))
 
-#2015년 (34회)
-count2015 <- filter(high, high$시점 == 2015 & high$지점명 == '강릉')
+#2015년 (61회)
+count2015 <- filter(pest, pest$시점 == 2015)
   sum(table(count2015$평균기온..C.))
  
-#2016년 (36회)
-count2016 <- filter(high, high$시점 == 2016 & high$지점명 == '강릉')
+#2016년 (73회)
+count2016 <- filter(pest, pest$시점 == 2016 )
   sum(table(count2016$평균기온..C.)) 
    
-#2017년 (35회)
-count2017 <- filter(high, high$시점 == 2017 & high$지점명 == '강릉')
+#2017년 (89회)
+count2017 <- filter(pest, pest$시점 == 2017 )
   sum(table(count2017$평균기온..C.))
   
-#2018년 (55회)
-count2018 <- filter(high, high$시점 == 2018 & high$지점명 == '강릉')
+#2018년 (78회)
+count2018 <- filter(pest, pest$시점 == 2018 )
   sum(table(count2018$평균기온..C.))
   
-#2019년 (53회)
-count2019 <- filter(high, high$시점 == 2019 & high$지점명 == '강릉')
+#2019년 (58회)
+count2019 <- filter(pest, pest$시점 == 2019 )
   sum(table(count2019$평균기온..C.))
   
-#2020년 (42회)
-count2020 <- filter(high, high$시점 == 2020 & high$지점명 == '강릉')
+#2020년 (57회)
+count2020 <- filter(pest, pest$시점 == 2020 )
   sum(table(count2020$평균기온..C.))  
+  
+# 빈도를 합치기 위해 df생성 전년도 데이터를 위해서 시점 2개 생성 시점1이 진짜 시점
+df_pest <- data.frame(시점1 = c(2014,2015,2016,2017,2018,2019,2020),
+                 시점 = c(2015,2016,2017,2018,2019,2020,2021),    
+                 병균적정온도횟수 = c(92,61,73,89,78,58,57))  
+
+garlic_production <- merge(garlic_production, df_pest, by = '시점') 
 
 ```
 
-## 11 내일(0815) 해야할것: 높은 온도뿐만아니라 마늘 성장에 영향을 미치는 요소 ex) 가뭄 홍수 등의 빈도를 계산해서 열추가를 목표로 하자
+#### 사용한 변수
+최성천외 1명, 기상자료를 이용한 마늘 생산량 추정, Journal of the Korean Data & 2016, 27(4), 969–977
+
+총 84개 기상변수중 다중회귀분석 단계선택방법을 통하여 7가지 기상변수가 선택되었으며, 하우
+스만 검정을 통해 채택된 확률효과모형으로 분석한 결과 평균최고기온 (1월), 누적강수량 (3월, 10월),
+누적일조시간 (4월, 10월)등이 마늘 생산량 추정에 유의한 변수로 나타났다.
+
+### 14 누적 일조시간 
+
+4월과 10월의 누적일조시간
+```{r}
+
+sun <- read.csv("필요한 날씨 데이터.csv")
+
+year <- substr(sun$일시, 1, 4) # 연도만 추출해보자
+
+month <- substr(sun$일시, 6, 7) # 연도만 추출해보자
+
+sun <- cbind(sun, year) # 연도와 날씨를 합치기
+
+sun <- cbind(sun, month) # 월 과 날씨를 합치기
+
+names(sun)[names(sun)=="month"]="월"
+
+names(sun)[names(sun)=="year"]="시점"
+
+sun <- sun %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
+
+sun1 <-  sun%>% filter(월 == '04' | 월 == '10' )
+
+sun1 <- sun1%>% filter(지점명 == '정선군')
+
+# write.csv(sun1, 'sun1.csv')
+# 엑셀처리 함 평균열만들어서 평균구함
+sun1 <- read.csv('sun1.csv')
+
+#str(sun1)
+
+sun_mean <- sun1 %>% filter(!is.na(일조시간.평균))
+
+sun_mean <- cbind(sun_mean$시점, sun_mean$일조시간.평균)
+
+colnames(sun_mean) = c("시점", "일조시간평균")
+
+garlic_production <- merge(garlic_production, sun_mean, by = '시점') 
+
+```
+
+### 15 평균최고기온 (1월)
+
+```{r}
+
+C <- read.csv("필요한 날씨 데이터.csv")
+
+year <- substr(C$일시, 1, 4) # 연도만 추출해보자
+
+month <- substr(C$일시, 6, 7) # 연도만 추출해보자
+
+C <- cbind(C, year) # 연도와 날씨를 합치기
+
+C <- cbind(C, month) # 월 과 날씨를 합치기
+
+names(C)[names(C)=="month"]="월"
+
+names(C)[names(C)=="year"]="시점"
+
+C <- C %>% relocate(시점,월) #연도, 월을 맨 앞으로 옮기기
+
+C1 <-  C%>% filter(월 == '01')
+
+C1 <- C1%>% filter(지점명 == '정선군')
+
+#str(C1)
+
+C_mean <- cbind(C1$시점, C1$평균기온..C.)
+
+colnames(C_mean) = c("시점", "1월 평균기온")
+
+garlic_production <- merge(garlic_production, C_mean, by = '시점') 
+
+```
+
+### 16 열 삭제
+
+```{r}
+# write.csv(garlic_production, 'garlic_production.csv') 엑셀처리
+
+garlic_production <- read.csv('garlic_production.csv')
+``` 
+
