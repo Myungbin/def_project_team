@@ -17,6 +17,12 @@ library(tidyverse)
 library(lubridate)
 library(knitr)
 library(ggplot2)
+library(reshape)
+library(TTR)
+library(forecast)
+#library(rio)
+#library(vars)
+#library(tsDyn)
 ```
 
 
@@ -574,3 +580,61 @@ garlic_production <- merge(garlic_production, C_mean, by = '시점')
 garlic_production <- read.csv('garlic_production.csv')
 ``` 
 
+## 17 새로해보자
+```{r}
+library(lubridate) # 날짜 관련 library
+
+test <- read.csv("아오시발.csv")
+
+wt <- read.csv("필요한 날씨 데이터.csv")
+
+time <- ymd(test$일자) # 시간 변환
+
+time <- data.frame(time - 100) # 3달전 데이터로 표시 
+
+test <- cbind(test, time)
+
+names(test)[names(test)=="time...100"]="시간"
+
+year <- substr(test$시간, 1, 4) # 연도만 추출해보자
+
+month <- substr(test$시간, 6, 7) # 연도만 추출해보자
+
+test <- cbind(test, year) # 연도와 날씨를 합치기
+
+test <- cbind(test, month) # 월 과 날씨를 합치기
+
+names(test)[names(test)=="month"]="월"
+
+names(test)[names(test)=="year"]="연도"
+
+
+## -------------------------------
+
+
+year <- substr(wt$일시, 1, 4) # 연도만 추출해보자
+
+month <- substr(wt$일시, 6, 7) # 연도만 추출해보자
+
+wt <- cbind(wt, year) # 연도와 날씨를 합치기
+
+wt <- cbind(wt, month) # 월 과 날씨를 합치기
+
+names(wt)[names(wt)=="month"]="월"
+
+names(wt)[names(wt)=="year"]="연도"
+
+names(wt)[names(wt)=="지점명"]="시군산지"
+
+wt <- wt %>% relocate(연도,월) #연도, 월을 맨 앞으로 옮기기
+
+wt <- wt %>% filter(지점명 == '춘천'|지점명 == '철원'|지점명 == '강릉'|지점명 == '동해'|지점명 == '원주'|지점명 == '홍천'|지점명 == '태백'|지점명 == '정선') # 중복되는곳 선택해서
+
+mer <- c("시군산지", '연도', '월')
+
+plz <- merge(test, wt, by =mer)
+
+unique(plz$월합강수량.00.24h만..mm.)
+
+plz
+```
