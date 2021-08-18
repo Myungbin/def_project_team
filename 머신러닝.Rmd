@@ -66,7 +66,7 @@ var3 <- VAR(garlic_production_ts, p=3, type="const")
 
 ```{r}
 
-str(plz)
+# str(plz)
 
 select <- dplyr::select
 
@@ -97,3 +97,72 @@ forecast(var3) %>%
 
 ```
 
+## 랜덤포레스트
+
+```{R}
+library('tidyverse')
+library('tidymodels')
+library(randomForest)
+library(yardstick)
+plz <- read.csv('plz.csv')
+
+str(plz)
+
+plz %>%
+  initial_split(prop=0.7) -> plz_split
+
+plz_split
+
+plz_split %>%
+  training()
+
+plz_split %>%
+  testing()
+
+str(plz)
+
+plz$도매가격.원.kg.<-as.numeric(plz$도매가격.원.kg.)
+
+plz$평균상대습도...<-as.numeric(plz$평균상대습도...)
+
+
+plz_split %>% training() %>%
+  recipe(도매가격.원.kg.~ 평균+평균기온..C.+평균상대습도...+월합강수량.00.24h만..mm.+합계.일조시간.hr.+생산량..톤.)
+
+ plz_split %>% training() %>%
+  recipe(도매가격.원.kg.~ 평균+평균기온..C.+평균상대습도...+월합강수량.00.24h만..mm.+합계.일조시간.hr.+생산량..톤.)%>%
+  step_corr(all_predictors()) %>%
+  step_center(all_predictors(), -all_outcomes()) %>%
+  step_scale(all_predictors(), -all_outcomes()) %>%
+  prep() -> plz_recipe
+
+plz_recipe
+
+plz_recipe %>%
+  bake(plz_split %>% testing()) -> plz_testing
+
+plz_recipe %>%
+  juice() -> plz_training
+
+plz_training
+
+rand_forest(trees=100, mode='regression') %>%
+  set_engine('randomForest') %>%
+  fit(도매가격.원.kg.~ 평균+평균기온..C.+평균상대습도...+월합강수량.00.24h만..mm.+합계.일조시간.hr.+생산량..톤., data = plz_training) -> plz_rf
+     
+plz_rf
+
+plz_rf %>%
+  predict(plz_testing) %>%
+  bind_cols(plz_testing)
+
+a <- plz_rf %>%
+  predict(plz_testing) %>%
+  bind_cols(plz_testing) %>%
+  metrics(truth=도매가격.원.kg., estimate=.pred)
+
+a
+
+```
+
+### LSTM
