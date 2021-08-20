@@ -1,0 +1,179 @@
+---
+title: "진짜 코드정리"
+author: "곽명빈"
+date: '2021 8 20 '
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(ggplot2)
+library(reshape)
+library(TTR)
+library(forecast)
+```
+
+```{r}
+weather <- read.csv("강원도 날씨.csv")
+garlic <- read.csv("마늘가격.csv")
+production <- read.csv("마늘생산량.csv")
+garlic <- filter(garlic, 광역산지 == '강원') #강원지역만 선정
+
+weather <- filter(weather, 지점명 == '정선') #강원지역만 선정
+
+# write.csv(weather, '정선.csv')
+```
+
+### 2 지역명 통일을 위해서 어떤 지점이 있는지 확인
+```{r}
+weather_name <- unique(weather$지점명)
+garlic_name <- unique(garlic$시군산지)
+```
+
+### 3 마늘 + 생산량 데이터 만들기
+```{r}
+year <- substr(garlic$일자, 1, 4) # 연도만 추출해보자
+
+garlic <- cbind(garlic, year) # d와 마늘을 합치기
+
+names(garlic)[names(garlic)=="year"]="시점" # 열이름을 시점으로 변경
+
+garlic_production <- merge(garlic, production, by ="시점") # 시점 기준으로 합치기
+
+# 필요없는 열을 제거하기
+garlic_production <- subset(garlic_production, select = -시도별)
+garlic_production <- subset(garlic_production, select = -시장)
+garlic_production <- subset(garlic_production, select = -법인)
+
+```
+
+### 4 단위 통일 시키기(톤으로)
+```{r}
+t <- garlic_production$X10a당.생산량..kg.*0.001 # kg단위를 t단위로 전환
+
+garlic_production <- cbind(garlic_production, t)
+
+names(garlic_production)[names(garlic_production)=="t"]="10a당 생산량.톤" # 열이름을 시점으로 변경
+
+```
+
+
+### 5 연도별 품종의 거래량 평균데이터 만들기
+```{r}
+unique(garlic_production$시군산지)
+g_ghd <- garlic_production %>% filter(시군산지 == '홍천')
+g_vud <- garlic_production %>% filter(시군산지 == '평창')
+g_cjf <- garlic_production %>% filter(시군산지 == '철원') 
+g_cns <- garlic_production %>% filter(시군산지 == '춘천') 
+g_tka <- garlic_production %>% filter(시군산지 == '삼척') 
+g_rkd <- garlic_production %>% filter(시군산지 == '강릉') 
+g_ghld <- garlic_production %>% filter(시군산지 == '횡성') 
+g_rh <- garlic_production %>% filter(시군산지 == '강원고성') 
+g_dnjs <- garlic_production %>% filter(시군산지 == '원주') 
+g_xo <- garlic_production %>% filter(시군산지 == '태백') 
+g_ehd <- garlic_production %>% filter(시군산지 == '동해') 
+g_wjd <- garlic_production %>% filter(시군산지 == '정선') 
+g_did <- garlic_production %>% filter(시군산지 == '양구') 
+g_ghk <- garlic_production %>% filter(시군산지 == '화천') 
+```
+# Show in New Window
+[1] "홍천"     "평창"     "철원"     "춘천"     "삼척"     "강릉"     "횡성"     "강원고성" "원주"    
+[10] "태백"     "동해"     "정선"     "양구"     "화천"    
+
+### 6 연도별 분류
+```{r}
+g2015 <- garlic_production %>% filter(시점 == 2015)
+g2016 <- garlic_production %>% filter(시점 == 2016)
+g2017 <- garlic_production %>% filter(시점 == 2017)
+g2018 <- garlic_production %>% filter(시점 == 2018)
+g2019 <- garlic_production %>% filter(시점 == 2019)
+g2020 <- garlic_production %>% filter(시점 == 2020)
+g2021 <- garlic_production %>% filter(시점 == 2021)
+
+```
+
+
+### 7 지역의 거래량의 평균
+```{r}
+
+a2015 <- data.frame(tapply(g2015$거래량.톤., g2015$시군산지, mean))
+a2016 <- data.frame(tapply(g2016$거래량.톤., g2016$시군산지, mean))
+a2017 <- data.frame(tapply(g2017$거래량.톤., g2017$시군산지, mean))
+a2018 <- data.frame(tapply(g2018$거래량.톤., g2018$시군산지, mean))
+a2019 <- data.frame(tapply(g2019$거래량.톤., g2019$시군산지, mean))
+a2020 <- data.frame(tapply(g2020$거래량.톤., g2020$시군산지, mean))
+a2021 <- data.frame(tapply(g2021$거래량.톤., g2021$시군산지, mean))
+
+# csv파일로 저장한 이유는 엑셀내에서 수정이 편하기 때문 (열이름 변경과 시점열 만들었음)
+
+#write.csv(a2016,"a2016.csv")
+#write.csv(a2017,"a2017.csv")
+#write.csv(a2018,"a2018.csv")
+#write.csv(a2019,"a2019.csv")
+#write.csv(a2020,"a2020.csv")
+#write.csv(a2021,"a2021.csv")
+
+a2015 <- read.csv("a2015.csv")
+a2016 <- read.csv("a2016.csv")
+a2017 <- read.csv("a2017.csv")
+a2018 <- read.csv("a2018.csv")
+a2019 <- read.csv("a2019.csv")
+a2020 <- read.csv("a2020.csv")
+a2021 <- read.csv("a2021.csv")
+
+all_year <- rbind(a2015,a2016,a2017,a2018,a2019,a2020,a2021) # 데이터 합치기
+
+row_name <- c("시점", "시군산지")  
+
+garlic_production <- merge(garlic_production, all_year, by = row_name) # 합치기
+
+# write.csv(garlic_production, "garlic.csv")
+
+# garlic_production <- read.csv("garlic.csv")
+```
+
+### 8 파이썬 처리
+import pandas as pd
+test = pd.read_csv("정선.csv",encoding='euc=kr')
+
+a=[]
+for i in range(0,2557-180):
+    a.append(test.loc[i:i+180])
+b=[]
+for i in range(len(a)):
+    b.append(a[i].mean())
+    
+c=pd.DataFrame(b[0]).T
+for i in range(1,len(b)):
+    d=pd.DataFrame(b[i]).T
+    c = pd.concat([c,d])
+c
+
+c.to_csv('생육기간.csv', encoding= 'cp949', index= False)
+
+b = test['일자'].iloc[90:]
+
+a = pd.read_csv('생육기간.csv', encoding= 'cp949')
+
+c = pd.concat([a,b], axis= 1)
+
+c.to_csv('생육기간.csv', encoding= 'cp949', index= False)
+
+### 9 '진짜' 
+```{r}
+weather <- read.csv('생육기간.csv')
+
+true <- inner_join(test, weather, by = '일자')
+
+# write.csv(true, 'True.csv')
+```

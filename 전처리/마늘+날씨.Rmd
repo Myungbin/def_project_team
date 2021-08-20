@@ -1,0 +1,22 @@
+---
+title: "마늘 + 날씨 추가한거"
+author: "곽명빈"
+date: "`r Sys.Date()`"
+output: html_notebook
+---
+
+```{r}
+library(readxl)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(ggplot2)
+```
+
+```{r}
+garlic <- read.csv("마늘.csv")
+```
+
