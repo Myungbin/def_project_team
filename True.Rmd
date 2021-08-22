@@ -175,5 +175,24 @@ weather <- read.csv('생육기간.csv')
 
 true <- inner_join(test, weather, by = '일자')
 
-# write.csv(true, 'true.csv')
+# write.csv(true, 'True.csv')
 ```
+
+```{r}
+plz <- read.csv('True.csv')
+boxplot(plz$도매가격.원.kg.)
+boxplot(plz$도매가격.원.kg.)$stats  # 상자그림 통계치 출력
+```
+
+```{r}
+plz$도매가격.원.kg. <- ifelse(plz$도매가격.원.kg. < 375 | plz$도매가격.원.kg. > 11000, NA, plz$도매가격.원.kg.)
+table(is.na(plz$도매가격.원.kg.))
+sum(is.na(plz$도매가격.원.kg.))
+max(plz$도매가격.원.kg.)
+
+na <- plz %>% filter(!is.na(도매가격.원.kg.))
+
+# write.csv(na, '이상치제거.csv')
+```
+
+
