@@ -1,0 +1,21 @@
+---
+title: "prophet"
+author: "곽명빈"
+date: '2021 8 22 '
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(prophet)
+```
+
+```{r}
+R[write to console]: Loading required package: Rcpp
+
+R[write to console]: Loading required package: rlang
+```
+

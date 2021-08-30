@@ -1,0 +1,46 @@
+---
+title: "다중 회귀분석"
+author: "곽명빈"
+date: '2021 8 20 '
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("psych")
+library(car)
+library(ggplot2)
+```
+
+```{r}
+plz <- read.csv('True.csv')
+
+str(plz)
+
+model <- lm(도매가격.원.kg. ~ 평균기온..C.+일강수량.mm.+평균.풍속.m.s.+합계.일조시간.hr.+평균.지면온도..C.+평균.5cm.지중온도..C.+생산량..톤.+X10a당.생산량.톤, data = plz)
+
+summary(model)
+
+```
+
+```{r}
+plot(plz$도매가격.원.kg. ~ plz$평균기온..C., pch = 19, col = "light blue", xlab = "기온", ylab = "도매가격")
+abline(lm(plz$도매가격.원.kg. ~ plz$평균기온..C., data = plz), col = "blue", lwd = 3)
+abline(a = -7, b = 1, col="black", lty = 2, lwd =2)
+```
+```{r}
+a <- data.frame(vif(model)) # 다중 공산성 확인 결과 기온, 지면온도가 다중공산성 있는 것으로 확인
+
+model_2 <- update(model, .~. -평균기온..C.-평균.지면온도..C.-평균.5cm.지중온도..C.)
+
+summary(model_2)
+
+anova(model, model_2)
+
+summary(model_2)
+
+model_3 <- update(model_2, .~. -합계.일조시간.hr.)
+
+summary(model_3)
+```
+

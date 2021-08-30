@@ -1,0 +1,39 @@
+---
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(tidyverse)
+library(lubridate)
+library(knitr)
+library(ggplot2)
+library(reshape)
+library(TTR)
+library(forecast)
+```
+
+```{r}
+garlic <- read.csv("마늘가격.csv")
+garlic <- filter(garlic, 광역산지 == '강원') #강원지역만 선정
+
+year <- substr(G_weather$일시, 1, 4) # 연도만 추출해보자
+
+month <- substr(G_weather$일시, 6, 7) # 연도만 추출해보자
+
+G_weather <- cbind(G_weather, year) # 연도와 날씨를 합치기
+
+G_weather <- cbind(G_weather, month) # 월 과 날씨를 합치기
+
+names(G_weather)[names(G_weather)=="month"]="월"
+
+names(G_weather)[names(G_weather)=="year"]="시점"
+
+```
+
