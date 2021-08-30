@@ -1,0 +1,92 @@
+---
+title: "가격예측을 위한 날씨"
+author: "곽명빈"
+date: '2021 8 27 '
+output: html_document
+---
+
+```{r}
+# install.packages(readxl)
+# install.packages(dplyr)
+# install.packages(stringr)
+# install.packages(tidyr)
+# install.packages(tidyverse)
+# install.packages(lubridate)
+# install.packages(knitr)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(tidyverse)
+library(lubridate)
+library(knitr)
+
+```
+
+```{r}
+garlic <- read.csv("마늘가격(2).csv")
+
+garlic <- filter(garlic, 광역산지 == '강원')
+
+production <- read.csv("마늘생산량.csv") # 생산량 데이터를 production에 저장
+
+```
+
+
+```{r}
+year <- substr(garlic$일자, 1, 4) # 연도만 추출해보자
+
+garlic <- cbind(garlic, year) # d와 마늘을 합치기
+
+names(garlic)[names(garlic)=="year"]="시점" # 열이름을 시점으로 변경
+
+garlic_production <- merge(garlic, production, by ="시점") # 시점 기준으로 합치기
+
+a2021 <- read.csv("a2021(2).csv")
+
+garlic_production <- merge(garlic_production, a2021, by = '시점') # 합치기
+
+
+
+```
+
+# 파이썬 처리
+
+import pandas as pd
+test = pd.read_csv("날씨1.csv",encoding='euc=kr')
+
+a=[]
+for i in range(0,605-180):
+    a.append(test.loc[i:i+180])
+b=[]
+for i in range(len(a)):
+    b.append(a[i].mean())
+    
+c=pd.DataFrame(b[0]).T
+for i in range(1,len(b)):
+    d=pd.DataFrame(b[i]).T
+    c = pd.concat([c,d])
+c
+
+# c.to_csv('w_pred.csv', encoding= 'cp949', index= False)
+
+# b = test['일시'].iloc[90:]
+
+# a = pd.read_csv('w_pred.csv', encoding= 'cp949')
+
+# c = pd.concat([a,b], axis= 1)
+
+# c.to_csv('w_pred.csv', encoding= 'cp949', index= False)
+```{r}
+weather <- read.csv("w_pred.csv")
+
+
+true <- inner_join(garlic_production, weather, by = '일자')
+
+# write.csv(true, "gar_pred.csv")
+```
+
